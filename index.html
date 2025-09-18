@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Simulador de Memória RAM</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      text-align: center;
+      background: url("https://i.imgur.com/zwLUSFJ.jpeg") no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 20px;
+      color: #333030;  
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 2rem;
+      color: #eeeef3;
+      text-shadow: 0 2px 5px rgba(15, 15, 15, 0.2);
+    }
+
+    #controls {
+      margin-bottom: 10px;
+      background: rgba(245, 242, 242, 0.95);
+      padding: 20px;
+      border-radius: 15px;
+      display: inline-block;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    #controls input, #controls textarea {
+      padding: 8px;
+      font-size: 14px;
+      margin: 5px;
+      border: 1px solid #26af1a;
+      border-radius: 8px;
+      outline: none;
+      transition: border 0.3s ease;
+    }
+
+    #controls input:focus, #controls textarea:focus {
+      border: 1px solid #2ab318;
+    }
+
+    #controls button {
+      padding: 8px 14px;
+      margin: 5px;
+      font-size: 14px;
+      border: none;
+      background: #08a71d;
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+      box-shadow: 0 2px 6px rgba(32, 167, 14, 0.15);
+    }
+
+    #controls button:hover {
+      background: #5ead57;
+      transform: scale(1.05);
+    }
+
+    #memory-info {
+      margin: 15px auto 20px auto;
+      padding: 12px 25px;
+      font-size: 15px;
+      background: rgba(248, 247, 247, 0.1);
+      border: 1px solid #15bd23;                                   
+      border-radius: 12px;
+      width: fit-content;
+      font-weight: bold;
+      color: #434244;
+      box-shadow: 0 2px 8px rgba(27, 199, 27, 0.15);
+    }
+
+    #memory-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 80px);
+      gap: 12px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .cell {
+      border: 2px solid #16ca10;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      background: rgb(228, 225, 225);
+      font-weight: bold;
+      transition: background 0.5s ease, transform 0.2s ease;
+      box-shadow: 0 3px 8px rgba(31, 207, 7, 0.1);
+    }
+
+    .cell:hover {
+      transform: scale(1.05);
+    }
+
+    .highlight {
+      background: #0baf0b !important;
+    }
+
+    #log {
+      margin-top: 25px;
+      background: rgba(221, 219, 219, 0.95);
+      border-radius: 12px;
+      padding: 15px;
+      width: 65%;
+      margin-left: auto;
+      margin-right: auto;
+      max-height: 220px;
+      overflow-y: auto;
+      text-align: left;
+      font-size: 14px;
+      box-shadow: 0 4px 15px rgba(25, 104, 38, 0.2);
+    }
+
+    #log p {
+      margin: 5px 0;
+    }
+
+    .error {
+      color: #dc3545;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1> Simulador de Memória RAM</h1>
+
+  <div id="controls">
+    <label>Profundidade da Memória:
+      <input type="number" id="depth" value="16" min="2">
+    </label>
+    <button onclick="initMemory()">Iniciar Memória</button>
+    <br><br>
+    <textarea id="commands" rows="5" cols="40" placeholder="Digite comandos (ex: ST 0001 10, LD 0001)"></textarea>
+    <br>
+    <button onclick="loadCommands()">Carregar Comandos</button>
+    <button onclick="nextCommand()">Próximo Comando</button>
+    <button onclick="autoRun()">Executar Automático</button>
+    <button onclick="resetSim()">Resetar</button>
+  </div>
+
+  <!-- Barra de informações da memória -->
+  <div id="memory-info"></div>
+
+  <!-- Grade da memória -->
+  <div id="memory-grid"></div>
+
+  <!-- Log de operações -->
+  <div id="log"></div>
+
+  <script>
+    let memorySize = 16; 
+    let memory = [];
+    let commandList = [];
+    let currentCommand = 0;
+    let autoInterval = null;
+
+    function initMemory() {
+      memorySize = parseInt(document.getElementById("depth").value);
+      if (isNaN(memorySize) || memorySize < 2) memorySize = 16;
+      memory = new Array(memorySize).fill(null);
+      commandList = [];
+      currentCommand = 0;
+      clearInterval(autoInterval);
+      renderMemory();
+      log(`Memória inicializada com ${memorySize} células.`);
+    }
+
+    function renderMemory() {
+      const grid = document.getElementById("memory-grid");
+      grid.innerHTML = "";
+      memory.forEach((value, i) => {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.innerHTML = `<div>[${i.toString().padStart(Math.ceil(Math.log2(memorySize)), "0")}]</div><div>${value !== null ? value : "-"}</div>`;
+        grid.appendChild(cell);
+      });
+      updateInfo();
+    }
+
+    function updateInfo() {
+      const addressBits = Math.ceil(Math.log2(memorySize));
+      const cellBits = 8; 
+      document.getElementById("memory-info").innerText =
+        `Profundidade: ${memorySize} | Endereço: ${addressBits} bits | Célula: ${cellBits} bits`;
+    }
+
+    function loadCommands() {
+      const text = document.getElementById("commands").value.trim();
+      commandList = text.split("\n").map(line => line.trim()).filter(l => l.length > 0);
+      currentCommand = 0;
+      log(`Comandos carregados: ${commandList.length}`);
+    }
+
+    function nextCommand() {
+      if (currentCommand >= commandList.length) {
+        log("Nenhum comando restante.");
+        return;
+      }
+      executeCommand(commandList[currentCommand]);
+      currentCommand++;
+    }
+
+    function autoRun() {
+      if (commandList.length === 0) {
+        log("Nenhum comando carregado.", true);
+        return;
+      }
+      clearInterval(autoInterval);
+      autoInterval = setInterval(() => {
+        if (currentCommand >= commandList.length) {
+          clearInterval(autoInterval);
+          log("Execução automática finalizada.");
+          return;
+        }
+        executeCommand(commandList[currentCommand]);
+        currentCommand++;
+      }, 1000);
+    }
+
+    function executeCommand(cmd) {
+      const parts = cmd.split(" ");
+      const op = parts[0].toUpperCase();
+      const addr = parseInt(parts[1]);
+      const data = parts[2];
+
+      if (op === "ST") {
+        store(addr, data);
+      } else if (op === "LD") {
+        load(addr);
+      } else {
+        log(`Comando inválido: ${cmd}`, true);
+      }
+    }
+
+    function store(address, data) {
+      if (isNaN(address) || address < 0 || address >= memorySize) {
+        log(`Erro: Endereço inválido (${address})`, true);
+        return;
+      }
+      memory[address] = data || Math.floor(Math.random() * 256);
+      renderMemory();
+      highlightCell(address);
+      log(`ST: Armazenado "${memory[address]}" no endereço ${address}`);
+    }
+
+    function load(address) {
+      if (isNaN(address) || address < 0 || address >= memorySize) {
+        log(`Erro: Endereço inválido (${address})`, true);
+        return;
+      }
+      const value = memory[address];
+      highlightCell(address);
+      log(`LD: Lido "${value !== null ? value : "-"}" do endereço ${address}`);
+    }
+
+    function highlightCell(index) {
+      const cells = document.querySelectorAll(".cell");
+      cells[index].classList.add("highlight");
+      setTimeout(() => {
+        cells[index].classList.remove("highlight");
+      }, 1000);
+    }
+
+    function resetSim() {
+      memory = new Array(memorySize).fill(null);
+      renderMemory();
+      document.getElementById("log").innerHTML = "";
+      commandList = [];
+      currentCommand = 0;
+      clearInterval(autoInterval);
+      log("Simulador resetado.");
+    }
+
+    function log(message, isError = false) {
+      const logDiv = document.getElementById("log");
+      const p = document.createElement("p");
+      p.innerText = message;
+      if (isError) p.classList.add("error");
+      logDiv.appendChild(p);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    renderMemory();
+  </script>
+</body>
+</html>
