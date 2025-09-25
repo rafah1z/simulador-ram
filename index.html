@@ -1,9 +1,13 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!DOCTYPE html> <!-- Declara que o documento é HTML5 -->
+<html lang="pt-BR"> <!-- Define o idioma da página -->
 <head>
-  <meta charset="UTF-8">
-  <title>Simulador de Memória RAM</title>
+  <meta charset="UTF-8"> <!-- Codificação para acentuação -->
+  <title>Simulador de Memória RAM</title> <!-- Título da aba -->
+
   <style>
+    /* ===========================
+       ESTILOS GERAIS DA PÁGINA
+       =========================== */
     body {
       font-family: "Segoe UI", Tahoma, sans-serif;
       text-align: center;
@@ -11,9 +15,12 @@
       background-size: cover;
       margin: 0;
       padding: 20px;
-      color: #333030;  
+      color: #333030;
     }
 
+    /* ===========================
+       TÍTULO PRINCIPAL
+       =========================== */
     h1 {
       margin-bottom: 20px;
       font-size: 2rem;
@@ -21,6 +28,9 @@
       text-shadow: 0 2px 5px rgba(15, 15, 15, 0.2);
     }
 
+    /* ===========================
+       ÁREA DE CONTROLE (inputs e botões)
+       =========================== */
     #controls {
       margin-bottom: 10px;
       background: rgba(245, 242, 242, 0.95);
@@ -30,6 +40,7 @@
       box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 
+    /* Estilos dos inputs e textarea */
     #controls input, #controls textarea {
       padding: 8px;
       font-size: 14px;
@@ -39,11 +50,11 @@
       outline: none;
       transition: border 0.3s ease;
     }
-
     #controls input:focus, #controls textarea:focus {
       border: 1px solid #2ab318;
     }
 
+    /* Estilo dos botões */
     #controls button {
       padding: 8px 14px;
       margin: 5px;
@@ -56,18 +67,20 @@
       transition: background 0.3s ease, transform 0.2s ease;
       box-shadow: 0 2px 6px rgba(32, 167, 14, 0.15);
     }
-
     #controls button:hover {
       background: #5ead57;
       transform: scale(1.05);
     }
 
+    /* ===========================
+       INFORMAÇÕES SOBRE A MEMÓRIA
+       =========================== */
     #memory-info {
       margin: 15px auto 20px auto;
       padding: 12px 25px;
       font-size: 15px;
       background: rgba(248, 247, 247, 0.1);
-      border: 1px solid #15bd23;                                   
+      border: 1px solid #15bd23;
       border-radius: 12px;
       width: fit-content;
       font-weight: bold;
@@ -75,14 +88,18 @@
       box-shadow: 0 2px 8px rgba(27, 199, 27, 0.15);
     }
 
+    /* ===========================
+       GRADE DA MEMÓRIA
+       =========================== */
     #memory-grid {
       display: grid;
-      grid-template-columns: repeat(8, 80px);
+      grid-template-columns: repeat(8, 80px); /* 8 colunas fixas */
       gap: 12px;
       justify-content: center;
       margin-top: 10px;
     }
 
+    /* Cada célula da memória */
     .cell {
       border: 2px solid #16ca10;
       border-radius: 12px;
@@ -93,15 +110,16 @@
       transition: background 0.5s ease, transform 0.2s ease;
       box-shadow: 0 3px 8px rgba(31, 207, 7, 0.1);
     }
-
     .cell:hover {
       transform: scale(1.05);
     }
-
     .highlight {
       background: #0baf0b !important;
     }
 
+    /* ===========================
+       ÁREA DE LOG DE OPERAÇÕES
+       =========================== */
     #log {
       margin-top: 25px;
       background: rgba(221, 219, 219, 0.95);
@@ -116,19 +134,34 @@
       font-size: 14px;
       box-shadow: 0 4px 15px rgba(25, 104, 38, 0.2);
     }
-
     #log p {
       margin: 5px 0;
     }
-
     .error {
       color: #dc3545;
       font-weight: bold;
     }
+
+    /* ===========================
+       CRÉDITOS (RODAPÉ)
+       =========================== */
+    footer {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #eaeaea;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+      background: rgba(0, 0, 0, 0.4);
+      padding: 10px;
+      border-radius: 10px;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
   </style>
 </head>
+
 <body>
-  <h1> Simulador de Memória RAM</h1>
+  <h1>Simulador de Memória RAM</h1>
 
   <div id="controls">
     <label>Profundidade da Memória:
@@ -144,17 +177,19 @@
     <button onclick="resetSim()">Resetar</button>
   </div>
 
-  <!-- Barra de informações da memória -->
   <div id="memory-info"></div>
-
-  <!-- Grade da memória -->
   <div id="memory-grid"></div>
-
-  <!-- Log de operações -->
   <div id="log"></div>
 
+  <!-- ===========================
+       CRÉDITOS NO FINAL DA PÁGINA
+       =========================== -->
+  <footer>
+    Desenvolvido por <strong>Rafael H, Michael P, Cassio P, Jhonathan B, Vinicius R</strong>
+  </footer>
+
   <script>
-    let memorySize = 16; 
+    let memorySize = 16;
     let memory = [];
     let commandList = [];
     let currentCommand = 0;
@@ -185,7 +220,7 @@
 
     function updateInfo() {
       const addressBits = Math.ceil(Math.log2(memorySize));
-      const cellBits = 8; 
+      const cellBits = 8;
       document.getElementById("memory-info").innerText =
         `Profundidade: ${memorySize} | Endereço: ${addressBits} bits | Célula: ${cellBits} bits`;
     }
